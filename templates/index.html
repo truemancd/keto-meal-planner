@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Keto Meal Planner</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    label { font-weight: bold; display: block; margin-top: 10px; }
+    #foodSearch { width: 300px; padding: 5px; margin-top: 5px; }
+    #foodSelect, #selectedList { width: 300px; height: 150px; }
+    #controls { margin: 10px 0; }
+    table { border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 5px 10px; }
+    th { background: #eee; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>Create Your Keto Meal</h1>
+
+  <label for="foodSearch">Search Foods:</label>
+  <input id="foodSearch" placeholder="Type to filter…" />
+
+  <label for="foodSelect">Available Foods:</label>
+  <select id="foodSelect" multiple></select>
+
+  <div id="controls">
+    <button onclick="addFood()">Add →</button>
+    <button onclick="removeFood()">← Remove</button>
+  </div>
+
+  <label for="selectedList">Selected Foods:</label>
+  <select id="selectedList" multiple></select>
+
+  <label for="caloriesMin">Calories Min:</label>
+  <input type="number" id="caloriesMin" value="200" />
+
+  <label for="proteinMin">Protein Min:</label>
+  <input type="number" id="proteinMin" value="20" />
+
+  <label for="ratioMin">Ratio Min:</label>
+  <input type="number" id="ratioMin" value="3" />
+
+  <label for="objectiveType">Objective:</label>
+  <select id="objectiveType">
+    <option value="0">0: Feasibility Only</option>
+    <option value="1">1: Minimize</option>
+    <option value="2">2: Maximize</option>
+    <option value="3">3: Minimize Max</option>
+    <option value="4">4: Maximize Min</option>
+  </select>
+
+  <button onclick="submitForm()">Generate Meal</button>
+
+  <h2>Meal Plan</h2>
+  <pre id="output" style="background:#f9f9f9;padding:10px;"></pre>
+  <div id="details"></div>
+
+  <script>
+    const allFoods = {{ food_list | tojson }};
+
+    function populateSelect(list) {
+      const sel = document.getElementById('foodSelect');
+      sel.innerHTML = '';
+      list.forEach(food => {
+        const opt = document.createElement('option');
+        opt.value = food;
+        opt.textContent = food;
+        sel.appendChild(opt);
+      });
+    }
+
+    function addFood() {
+      const avail = document.getElementById('foodSelect');
+      const selList = document.getElementById('selectedList');
+      Array.from(avail.selectedOptions).forEach(opt => {
+        if (!Array.from(selList.options).some(o => o.value === opt.value)) {
+          selList.appendChild(opt.cloneNode(true));
+        }
+      });
+    }
+
+    function removeFood() {
+      const selList = document.getElementById('selectedList');
+      Array.from(selList.selectedOptions).forEach(opt => opt.remove());
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      populateSelect(allFoods);
+      document.getElementById('foodSearch').addEventListener('input', e => {
+        const q = e.target.value.toLowerCase();
+        populateSelect(allFoods.filter(f => f.toLowerCase().includes(q)));
+      });
+    });
+
+    function submitForm() {
+      const selected = Array.from(
+        document.getElementById('selectedList').options
+      ).map(o => o.value);
+      const payload = {
+        foods: selected,
+        calories_min: parseFloat(document.getElementById('caloriesMin').value) || 0,
+        protein_min: parseFloat(document.getElementById('proteinMin').value) || 0,
+        ratio_min: parseFloat(document.getElementById('ratioMin').value) || 0,
+        objective_function_type: parseInt(document.getElementById('objectiveType').value)
+      };
+      fetch('/optimize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(r => r.json())
+      .then(d => {
+        const out = document.getElementById('output');
+        const det = document.getElementById('details');
+        if (d.error) {
+          out.textContent = '⚠️ ' + d.error;
+          det.innerHTML = '';
+        } else {
+          out.textContent = d.meal_plan;
+          let html = '<h3>Ingredients</h3><table><tr>' +
+                     '<th>Name</th><th>g</th><th>Fat</th>' +
+                     '<th>Prot</th><th>Carb</th><th>Cal</th></tr>';
+          d.ingredients.forEach(i => {
+            html += `<tr><td>${i.name}</td>` +
+                    `<td>${i.grams.toFixed(2)}</td>` +
+                    `<td>${i.fat.toFixed(2)}</td>` +
+                    `<td>${i.protein.toFixed(2)}</td>` +
+                    `<td>${i.carbs.toFixed(2)}</td>` +
+                    `<td>${i.calories.toFixed(2)}</td></tr>`;
+          });
+          html += '</table><h3>Totals</h3><table>' +
+                  '<tr><th>Metric</th><th>Amount</th></tr>' +
+                  `<tr><td>Total Fat</td><td>${d.totals.fat.toFixed(2)}</td></tr>` +
+                  `<tr><td>Total Prot</td><td>${d.totals.protein.toFixed(2)}</td></tr>` +
+                  `<tr><td>Total Carb</td><td>${d.totals.carbs.toFixed(2)}</td></tr>` +
+                  `<tr><td>Total Cal</td><td>${d.totals.calories.toFixed(2)}</td></tr>` +
+                  '</table>';
+          det.innerHTML = html;
+        }
+      });
+    }
+  </script>
+</body>
+</html>
