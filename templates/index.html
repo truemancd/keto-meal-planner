@@ -105,9 +105,9 @@
     <input type="number" id="proteinMax" value="30" />
     <div class="info">Enter the maximum total protein in grams.</div>
 
-    <label for="ratioMin">Ratio Min (Fat/Protein):</label>
-    <input type="number" id="ratioMin" value="1" />
-    <div class="info">Minimum fat-to-protein ratio.</div>
+    <label for="ratioMax">Max Ratio (Fat/Protein):</label>
+    <input type="text" id="ratioMax" placeholder="e.g. 1.5:1, 3:1" />
+    <div class="info">Enter the maximum fat-to-protein ratio (e.g. 1.5:1).</div>
 
     <label for="objectiveType">Objective:</label>
     <select id="objectiveType">
@@ -145,6 +145,13 @@
         opt.textContent = food;
         foodSelect.appendChild(opt);
       });
+    }
+
+    function parseRatio(val) {
+      if (val.includes(':')) {
+        return parseFloat(val.split(':')[0]) || 0;
+      }
+      return parseFloat(val) || 0;
     }
 
     function loadSavedMeals() {
@@ -212,7 +219,7 @@
         foods: selected,
         calories_max: parseFloat(document.getElementById('caloriesMax').value) || 0,
         protein_max: parseFloat(document.getElementById('proteinMax').value) || 0,
-        ratio_min: parseFloat(document.getElementById('ratioMin').value) || 0,
+        ratio_max: parseRatio(document.getElementById('ratioMax').value),
         objective_function_type: parseInt(document.getElementById('objectiveType').value)
       };
       fetch('/optimize', {
@@ -238,7 +245,7 @@
       d.ingredients.forEach(i=>{
         html += `<li>${i.name}: ${i.grams.toFixed(2)}g (Fat ${i.fat.toFixed(1)}g, Prot ${i.protein.toFixed(1)}g, Carb ${i.carbs.toFixed(1)}g, Cal ${i.calories.toFixed(1)})</li>`;
       });
-      html += `</ul><p><strong>Totals</strong>: Calories ${d.totals.calories.toFixed(1)}g, Protein ${d.totals.protein.toFixed(1)}g, Fat ${d.totals.fat.toFixed(1)}g, Carbs ${d.totals.carbs.toFixed(1)}g</p>`;
+      html += `</ul><p><strong>Totals</strong>: Calories ${d.totals.calories.toFixed(1)}g, Protein ${d.totals.protein.toFixed(1)}g, Fat ${d.totals.fat.toFixed(1)}g, Carbs ${d.totals.carbs.toFixed(1)}g, Ratio ${d.totals.fat.toFixed(1)}:${d.totals.protein.toFixed(1)}</p>`;
       resultsDiv.innerHTML = html;
     }
   </script>
