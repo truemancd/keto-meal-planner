@@ -21,7 +21,7 @@
       padding: 30px;
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      max-width: 400px;
+      max-width: 500px;
       width: 100%;
     }
     h1 {
@@ -35,7 +35,7 @@
       margin-top: 15px;
       color: #555;
     }
-    input, select {
+    input, select, button {
       width: 100%;
       padding: 8px;
       margin-top: 5px;
@@ -50,25 +50,34 @@
       margin-top: 3px;
     }
     button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 20px;
       background-color: #2a9d8f;
       color: white;
       border: none;
-      border-radius: 4px;
-      font-size: 16px;
       cursor: pointer;
     }
     button:hover {
       background-color: #21867a;
     }
-    #results {
+    #results, #savedMeals {
       margin-top: 20px;
       background: #fafafa;
       padding: 15px;
       border-radius: 6px;
       border: 1px solid #e0e0e0;
+      max-height: 300px;
+      overflow: auto;
+    }
+    .saved-item {
+      margin-bottom: 10px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: #fff;
+    }
+    .saved-item button {
+      width: auto;
+      display: inline-block;
+      margin-top: 5px;
     }
   </style>
 </head>
@@ -110,15 +119,23 @@
     </select>
     <div class="info">Select your optimization goal.</div>
 
-    <button onclick="submitForm()">Generate Meal</button>
+    <button id="generateBtn">Generate Meal</button>
+    <button id="saveBtn" disabled>Save Meal</button>
 
     <div id="results"></div>
+
+    <h3>Saved Meals</h3>
+    <div id="savedMeals"></div>
   </div>
 
   <script>
     const allFoods = {{ food_list | tojson }};
     const foodSelect = document.getElementById('foodSelect');
     const selectedList = document.getElementById('selectedList');
+    const resultsDiv = document.getElementById('results');
+    const saveBtn = document.getElementById('saveBtn');
+    let currentResult = null;
+    let savedMeals = JSON.parse(localStorage.getItem('savedMeals') || '[]');
 
     function populateSelect(list) {
       foodSelect.innerHTML = '';
@@ -130,33 +147,66 @@
       });
     }
 
+    function loadSavedMeals() {
+      const savedDiv = document.getElementById('savedMeals');
+      savedDiv.innerHTML = '';
+      savedMeals.forEach((meal, idx) => {
+        const div = document.createElement('div');
+        div.className = 'saved-item';
+        div.innerHTML = `<strong>${meal.meal_plan}</strong><br>
+          Calories: ${meal.totals.calories.toFixed(1)}, Protein: ${meal.totals.protein.toFixed(1)}<br>
+          <button onclick="viewSaved(${idx})">View</button>
+          <button onclick="removeSaved(${idx})">Remove</button>`;
+        savedDiv.appendChild(div);
+      });
+    }
+
+    function viewSaved(idx) {
+      renderResults(savedMeals[idx]);
+    }
+
+    function removeSaved(idx) {
+      savedMeals.splice(idx,1);
+      localStorage.setItem('savedMeals', JSON.stringify(savedMeals));
+      loadSavedMeals();
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       populateSelect(allFoods);
+      loadSavedMeals();
+
       document.getElementById('foodSearch').addEventListener('input', e => {
         const q = e.target.value.toLowerCase();
         populateSelect(allFoods.filter(f => f.toLowerCase().includes(q)));
       });
 
-      // Double-click to add
       foodSelect.addEventListener('dblclick', e => {
         if (e.target.tagName === 'OPTION') {
-          const value = e.target.value;
-          if (!Array.from(selectedList.options).some(o => o.value === value)) {
-            const clone = e.target.cloneNode(true);
-            selectedList.appendChild(clone);
+          const val = e.target.value;
+          if (!Array.from(selectedList.options).some(o => o.value === val)) {
+            selectedList.appendChild(e.target.cloneNode(true));
           }
         }
       });
 
-      // Double-click to remove
       selectedList.addEventListener('dblclick', e => {
-        if (e.target.tagName === 'OPTION') {
-          e.target.remove();
+        if (e.target.tagName === 'OPTION') e.target.remove();
+      });
+
+      document.getElementById('generateBtn').addEventListener('click', submitForm);
+      saveBtn.addEventListener('click', () => {
+        if (currentResult) {
+          savedMeals.push(currentResult);
+          localStorage.setItem('savedMeals', JSON.stringify(savedMeals));
+          loadSavedMeals();
+          saveBtn.disabled = true;
         }
       });
     });
 
     function submitForm() {
+      resultsDiv.innerHTML = '<p>Generating...</p>';
+      saveBtn.disabled = true;
       const selected = Array.from(selectedList.options).map(o => o.value);
       const payload = {
         foods: selected,
@@ -166,31 +216,30 @@
         objective_function_type: parseInt(document.getElementById('objectiveType').value)
       };
       fetch('/optimize', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(payload)
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
       })
-      .then(response => response.json())
-      .then(d => renderResults(d))
-      .catch(err => {
-        document.getElementById('results').innerHTML = `<h2>Error</h2><p>${err.message}</p>`;
-      });
+      .then(r=>r.json())
+      .then(d=>{
+        renderResults(d);
+        if (!d.error) {
+          currentResult = d;
+          saveBtn.disabled = false;
+        }
+      })
+      .catch(err=>{ resultsDiv.innerHTML = `<p>Error: ${err.message}</p>`; });
     }
 
     function renderResults(d) {
-      const container = document.getElementById('results');
       if (d.error) {
-        container.innerHTML = `<h2>Error</h2><p>${d.error}</p>`;
+        resultsDiv.innerHTML = `<h2>Error</h2><p>${d.error}</p>`;
         return;
       }
-      let html = `<h2>${d.meal_plan}</h2>`;
-      html += '<h3>Ingredients</h3><ul>';
-      d.ingredients.forEach(i => {
-        html += `<li>${i.name}: ${i.grams.toFixed(2)}g (Fat: ${i.fat.toFixed(1)}g, Prot: ${i.protein.toFixed(1)}g, Carb: ${i.carbs.toFixed(1)}g, Cal: ${i.calories.toFixed(1)})</li>`;
+      let html = `<h2>${d.meal_plan}</h2><ul>`;
+      d.ingredients.forEach(i=>{
+        html += `<li>${i.name}: ${i.grams.toFixed(2)}g (Fat ${i.fat.toFixed(1)}g, Prot ${i.protein.toFixed(1)}g, Carb ${i.carbs.toFixed(1)}g, Cal ${i.calories.toFixed(1)})</li>`;
       });
-      html += '</ul><h3>Totals</h3>' +
-              `<p>Fat: ${d.totals.fat.toFixed(1)}g, Prot: ${d.totals.protein.toFixed(1)}g, Carb: ${d.totals.carbs.toFixed(1)}g, Cal: ${d.totals.calories.toFixed(1)}</p>`;
-      container.innerHTML = html;
+      html += `</ul><p><strong>Totals</strong>: Calories ${d.totals.calories.toFixed(1)}g, Protein ${d.totals.protein.toFixed(1)}g, Fat ${d.totals.fat.toFixed(1)}g, Carbs ${d.totals.carbs.toFixed(1)}g</p>`;
+      resultsDiv.innerHTML = html;
     }
   </script>
 </body>
