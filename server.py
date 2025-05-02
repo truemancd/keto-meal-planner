@@ -38,11 +38,11 @@ def optimize_meal():
         # Adjust because table is per-100g
         ft = Food_Type(
             name=r[food_col],
-            fat_gram_ratio=safe_float(r[fat_col]) / 100.0,
-            protein_gram_ratio=safe_float(r[prot_col]) / 100.0,
-            carbs_gram_ratio=safe_float(r[carbs_col]) / 100.0,
-            cal_gram_ratio=safe_float(r[cal_col]) / 100.0,
-            ml_gram_ratio=safe_float(r[vol_col]) / 100.0
+            fat_gram_ratio=safe_float(r[fat_col]) * 0.01,
+            protein_gram_ratio=safe_float(r[prot_col])* 0.01,
+            carbs_gram_ratio=safe_float(r[carbs_col]) * 0.01,
+            cal_gram_ratio=safe_float(r[cal_col]) * 0.01,
+            ml_gram_ratio=safe_float(r[vol_col]) * 0.01
         )
         meal.add_food_type(ft)
         meal.add_opti_ingredient(new_opti_ingredient=ft.get_name())
