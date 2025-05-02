@@ -1,58 +1,141 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Keto Meal Planner</title>
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    label { font-weight: bold; display: block; margin-top: 10px; }
-    #foodSearch { width: 300px; padding: 5px; margin-top: 5px; }
-    #foodSelect, #selectedList { width: 300px; height: 150px; }
-    #controls { margin: 10px 0; }
-    table { border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 5px 10px; }
-    th { background: #eee; text-align: left; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Open Sans', sans-serif;
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 30px;
+      max-width: 600px;
+      width: 100%;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 20px;
+      background-color: #C0392B;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #A93226;
+    }
+    .info-list {
+      font-size: 0.9rem;
+      color: #555;
+      margin: 8px 0 0 0;
+      padding-left: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
   </style>
 </head>
 <body>
-  <h1>Create Your Keto Meal</h1>
+  <div class="container">
+    <h1>Create Your Keto Meal</h1>
 
-  <label for="foodSearch">Search Foods:</label>
-  <input id="foodSearch" placeholder="Type to filter…" />
+    <label for="foodSearch">Search Foods:</label>
+    <input id="foodSearch" placeholder="Type to filter…">
+    <ul class="info-list">
+      <li>Type part of a food name to quickly filter the available options.</li>
+    </ul>
 
-  <label for="foodSelect">Available Foods:</label>
-  <select id="foodSelect" multiple></select>
+    <label for="foodSelect">Available Foods:</label>
+    <select id="foodSelect" multiple></select>
+    <ul class="info-list">
+      <li>Hold Command (⌘) or Ctrl to select multiple foods.</li>
+    </ul>
 
-  <div id="controls">
-    <button onclick="addFood()">Add →</button>
-    <button onclick="removeFood()">← Remove</button>
+    <div id="controls">
+      <button onclick="addFood()">Add →</button>
+      <button onclick="removeFood()">← Remove</button>
+    </div>
+
+    <label for="selectedList">Selected Foods:</label>
+    <select id="selectedList" multiple></select>
+    <ul class="info-list">
+      <li>These foods will be used in the meal optimization.</li>
+    </ul>
+
+    <label for="caloriesMin">Calories Min:</label>
+    <input type="number" id="caloriesMin" value="200">
+    <ul class="info-list">
+      <li>Minimum total calories for the meal.</li>
+    </ul>
+
+    <label for="proteinMin">Protein Min:</label>
+    <input type="number" id="proteinMin" value="20">
+    <ul class="info-list">
+      <li>Minimum grams of protein required.</li>
+    </ul>
+
+    <label for="ratioMin">Ratio Min (Fat/Protein):</label>
+    <input type="number" id="ratioMin" value="3">
+    <ul class="info-list">
+      <li>Minimum ratio of fat to protein (e.g., 3 means 3g fat per 1g protein).</li>
+    </ul>
+
+    <label for="objectiveType">Objective:</label>
+    <select id="objectiveType">
+      <option value="0">0: Feasibility Only</option>
+      <option value="1">1: Minimize Total Weight</option>
+      <option value="2">2: Maximize Protein</option>
+      <option value="3">3: Minimize Max Individual Food</option>
+      <option value="4">4: Maximize Min Individual Food</option>
+    </select>
+    <ul class="info-list">
+      <li>Select how the meal should be optimized.</li>
+    </ul>
+
+    <button onclick="submitForm()">Generate Meal</button>
   </div>
-
-  <label for="selectedList">Selected Foods:</label>
-  <select id="selectedList" multiple></select>
-
-  <label for="caloriesMin">Calories Min:</label>
-  <input type="number" id="caloriesMin" value="200" />
-
-  <label for="proteinMin">Protein Min:</label>
-  <input type="number" id="proteinMin" value="20" />
-
-  <label for="ratioMin">Ratio Min:</label>
-  <input type="number" id="ratioMin" value="3" />
-
-  <label for="objectiveType">Objective:</label>
-  <select id="objectiveType">
-    <option value="0">0: Feasibility Only</option>
-    <option value="1">1: Minimize</option>
-    <option value="2">2: Maximize</option>
-    <option value="3">3: Minimize Max</option>
-    <option value="4">4: Maximize Min</option>
-  </select>
-
-  <button onclick="submitForm()">Generate Meal</button>
-
-  <h2>Meal Plan</h2>
-  <pre id="output" style="background:#f9f9f9;padding:10px;"></pre>
-  <div id="details"></div>
 
   <script>
     const allFoods = {{ food_list | tojson }};
@@ -102,6 +185,7 @@
         ratio_min: parseFloat(document.getElementById('ratioMin').value) || 0,
         objective_function_type: parseInt(document.getElementById('objectiveType').value)
       };
+
       fetch('/optimize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -109,33 +193,28 @@
       })
       .then(r => r.json())
       .then(d => {
-        const out = document.getElementById('output');
-        const det = document.getElementById('details');
+        const resultWindow = window.open('', '_blank', 'width=700,height=600');
+        let html = `<!DOCTYPE html><html><head><title>Meal Plan</title>
+          <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap" rel="stylesheet">
+          <style>body{font-family:'Open Sans',sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;margin-top:20px;}th,td{border:1px solid #ddd;padding:8px;text-align:left;}th{background:#f0f0f0;}</style>
+          </head><body><h1>Meal Plan</h1>`;
         if (d.error) {
-          out.textContent = '⚠️ ' + d.error;
-          det.innerHTML = '';
+          html += `<p style="color:#C0392B;">⚠️ ${d.error}</p>`;
         } else {
-          out.textContent = d.meal_plan;
-          let html = '<h3>Ingredients</h3><table><tr>' +
-                     '<th>Name</th><th>g</th><th>Fat</th>' +
-                     '<th>Prot</th><th>Carb</th><th>Cal</th></tr>';
+          html += `<h3>Ingredients</h3><table><tr><th>Name</th><th>g</th><th>Fat</th><th>Prot</th><th>Carb</th><th>Cal</th></tr>`;
           d.ingredients.forEach(i => {
-            html += `<tr><td>${i.name}</td>` +
-                    `<td>${i.grams.toFixed(2)}</td>` +
-                    `<td>${i.fat.toFixed(2)}</td>` +
-                    `<td>${i.protein.toFixed(2)}</td>` +
-                    `<td>${i.carbs.toFixed(2)}</td>` +
-                    `<td>${i.calories.toFixed(2)}</td></tr>`;
+            html += `<tr><td>${i.name}</td><td>${i.grams.toFixed(2)}</td><td>${i.fat.toFixed(2)}</td><td>${i.protein.toFixed(2)}</td><td>${i.carbs.toFixed(2)}</td><td>${i.calories.toFixed(2)}</td></tr>`;
           });
-          html += '</table><h3>Totals</h3><table>' +
-                  '<tr><th>Metric</th><th>Amount</th></tr>' +
-                  `<tr><td>Total Fat</td><td>${d.totals.fat.toFixed(2)}</td></tr>` +
-                  `<tr><td>Total Prot</td><td>${d.totals.protein.toFixed(2)}</td></tr>` +
-                  `<tr><td>Total Carb</td><td>${d.totals.carbs.toFixed(2)}</td></tr>` +
-                  `<tr><td>Total Cal</td><td>${d.totals.calories.toFixed(2)}</td></tr>` +
-                  '</table>';
-          det.innerHTML = html;
+          html += `</table><h3>Totals</h3><table><tr><th>Metric</th><th>Amount</th></tr>`;
+          html += `<tr><td>Total Fat</td><td>${d.totals.fat.toFixed(2)}</td></tr>`;
+          html += `<tr><td>Total Prot</td><td>${d.totals.protein.toFixed(2)}</td></tr>`;
+          html += `<tr><td>Total Carb</td><td>${d.totals.carbs.toFixed(2)}</td></tr>`;
+          html += `<tr><td>Total Cal</td><td>${d.totals.calories.toFixed(2)}</td></tr>`;
+          html += `</table>`;
         }
+        html += `</body></html>`;
+        resultWindow.document.write(html);
+        resultWindow.document.close();
       });
     }
   </script>
