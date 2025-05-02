@@ -6,248 +6,95 @@
   <title>Keto Meal Planner</title>
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap" rel="stylesheet">
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Open Sans', sans-serif;
-      background-color: #f5f5f5;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    }
-    .container {
-      background: #fff;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      max-width: 500px;
-      width: 100%;
-    }
-    h1 {
-      margin-top: 0;
-      text-align: center;
-      color: #333;
-    }
-    label {
-      font-weight: bold;
-      display: block;
-      margin-top: 15px;
-      color: #555;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 14px;
-      box-sizing: border-box;
-    }
-    .info {
-      font-size: 12px;
-      color: #777;
-      margin-top: 3px;
-    }
-    button {
-      background-color: #2a9d8f;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #21867a;
-    }
-    #results, #savedMeals {
-      margin-top: 20px;
-      background: #fafafa;
-      padding: 15px;
-      border-radius: 6px;
-      border: 1px solid #e0e0e0;
-      max-height: 300px;
-      overflow: auto;
-    }
-    .saved-item {
-      margin-bottom: 10px;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      background: #fff;
-    }
-    .saved-item button {
-      width: auto;
-      display: inline-block;
-      margin-top: 5px;
-    }
+    body { margin:0; padding:0; font-family:'Open Sans',sans-serif; background:#f5f5f5; display:flex; justify-content:center; align-items:start; min-height:100vh; }
+    .container { background:#fff; padding:20px; margin:20px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); width:600px; }
+    h1,h2 { margin-top:0; }
+    .input-group { display:grid; grid-template-columns:1fr 1fr; grid-gap:10px; }
+    .input-group label { grid-column:span 2; font-weight:700; }
+    .input-group input, .input-group select, .input-group small { width:100%; }
+    .input-group small { color:#555; margin-bottom:10px; }
+    #foodList, #selectedList { height:120px; }
+    #results { margin-top:20px; }
+    #results table { width:100%; border-collapse:collapse; margin-top:10px; }
+    #results th, #results td { border:1px solid #ddd; padding:8px; text-align:left; }
+    #results th { background:#eee; }
+    #savedMeals { list-style:none; padding:0; }
+    #savedMeals li { background:#fafafa; margin:4px 0; padding:6px; border:1px solid #ddd; display:flex; justify-content:space-between; align-items:center; }
+    button { padding:8px 12px; border:none; border-radius:4px; background:#28a745; color:#fff; cursor:pointer; }
+    button#saveBtn { background:#007bff; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Keto Meal Planner</h1>
-
-    <label for="foodSearch">Search Foods:</label>
-    <input id="foodSearch" placeholder="Type to filter…" />
-    <div class="info">Search your available keto-friendly foods.</div>
-
-    <label for="foodSelect">Available Foods (double-click to add):</label>
-    <select id="foodSelect" multiple size="5"></select>
-    <div class="info">Double-click an item to add it to your selection.</div>
-
-    <label for="selectedList">Selected Foods (double-click to remove):</label>
-    <select id="selectedList" multiple size="5"></select>
-    <div class="info">Double-click an item here to remove it.</div>
-
-    <label for="caloriesMax">Max Calories:</label>
-    <input type="number" id="caloriesMax" value="500" />
-    <div class="info">Enter the maximum total calories.</div>
-
-    <label for="proteinMax">Max Protein (g):</label>
-    <input type="number" id="proteinMax" value="30" />
-    <div class="info">Enter the maximum total protein in grams.</div>
-
-    <label for="ratioMax">Max Ratio (Fat/Protein):</label>
-    <input type="text" id="ratioMax" placeholder="e.g. 1.5:1, 3:1" />
-    <div class="info">Enter the maximum fat-to-protein ratio (e.g. 1.5:1).</div>
-
-    <label for="objectiveType">Objective:</label>
-    <select id="objectiveType">
-      <option value="0">0: Feasibility Only</option>
-      <option value="1">1: Minimize Total Weight</option>
-      <option value="2">2: Maximize Protein</option>
-      <option value="3">3: Minimize Max Ingredient</option>
-      <option value="4">4: Maximize Min Ingredient</option>
-    </select>
-    <div class="info">Select your optimization goal.</div>
-
-    <button id="generateBtn">Generate Meal</button>
-    <button id="saveBtn" disabled>Save Meal</button>
-
+    <h2>Saved Meals</h2>
+    <ul id="savedMeals"></ul>
+    <div class="input-group">
+      <label for="foodSearch">Search Foods</label>
+      <input id="foodSearch" placeholder="Type to filter…" />
+      <label for="foodList">Available Foods (double-click to add)</label>
+      <select id="foodList" multiple></select>
+      <label for="selectedList">Selected Foods (double-click to remove)</label>
+      <select id="selectedList" multiple></select>
+      <label for="caloriesMax">Max Calories</label>
+      <input type="number" id="caloriesMax" placeholder="e.g., 500" />
+      <small>Enter the maximum total calories.</small>
+      <label for="proteinMax">Max Protein (g)</label>
+      <input type="number" id="proteinMax" placeholder="e.g., 30" />
+      <small>Enter the maximum total protein in grams.</small>
+      <label for="ratioMax">Max Fat:Protein Ratio</label>
+      <input type="text" id="ratioMax" placeholder="e.g., '1.5:1' or '1.5'" />
+      <small>Use decimal or 'x:y' format.</small>
+      <label for="objectiveType">Objective</label>
+      <select id="objectiveType">
+        <option value="0">0: Feasibility Only</option>
+        <option value="1">1: Minimize Total Grams</option>
+        <option value="2">2: Maximize Protein</option>
+        <option value="3">3: Minimize Max Ingredient</option>
+        <option value="4">4: Maximize Min Ingredient</option>
+      </select>
+      <button id="generateBtn" style="grid-column:span 2">Generate Meal</button>
+      <button id="saveBtn" style="grid-column:span 2; display:none;">Save Meal</button>
+    </div>
     <div id="results"></div>
-
-    <h3>Saved Meals</h3>
-    <div id="savedMeals"></div>
   </div>
-
   <script>
     const allFoods = {{ food_list | tojson }};
-    const foodSelect = document.getElementById('foodSelect');
-    const selectedList = document.getElementById('selectedList');
-    const resultsDiv = document.getElementById('results');
-    const saveBtn = document.getElementById('saveBtn');
-    let currentResult = null;
-    let savedMeals = JSON.parse(localStorage.getItem('savedMeals') || '[]');
-
-    function populateSelect(list) {
-      foodSelect.innerHTML = '';
-      list.forEach(food => {
-        const opt = document.createElement('option');
-        opt.value = food;
-        opt.textContent = food;
-        foodSelect.appendChild(opt);
+    function populateFoods(list) {
+      const fl = document.getElementById('foodList'); fl.innerHTML = '';
+      list.forEach(f=>{ let o=new Option(f,f); fl.add(o); });
+    }
+    // Initial populate & filter
+    document.addEventListener('DOMContentLoaded', ()=>{
+      populateFoods(allFoods);
+      document.getElementById('foodSearch').addEventListener('input', e=>{
+        populateFoods(allFoods.filter(f=>f.toLowerCase().includes(e.target.value.toLowerCase())));
       });
-    }
-
-    function parseRatio(val) {
-      if (val.includes(':')) {
-        return parseFloat(val.split(':')[0]) || 0;
-      }
-      return parseFloat(val) || 0;
-    }
-
-    function loadSavedMeals() {
-      const savedDiv = document.getElementById('savedMeals');
-      savedDiv.innerHTML = '';
-      savedMeals.forEach((meal, idx) => {
-        const div = document.createElement('div');
-        div.className = 'saved-item';
-        div.innerHTML = `<strong>${meal.meal_plan}</strong><br>
-          Calories: ${meal.totals.calories.toFixed(1)}, Protein: ${meal.totals.protein.toFixed(1)}<br>
-          <button onclick="viewSaved(${idx})">View</button>
-          <button onclick="removeSaved(${idx})">Remove</button>`;
-        savedDiv.appendChild(div);
-      });
-    }
-
-    function viewSaved(idx) {
-      renderResults(savedMeals[idx]);
-    }
-
-    function removeSaved(idx) {
-      savedMeals.splice(idx,1);
-      localStorage.setItem('savedMeals', JSON.stringify(savedMeals));
+      // Dblclick handlers
+      document.getElementById('foodList').addEventListener('dblclick',e=>addFood(e.target.value));
+      document.getElementById('selectedList').addEventListener('dblclick',e=>removeFood(e.target.value));
+      document.getElementById('generateBtn').addEventListener('click',submitForm);
+      document.getElementById('saveBtn').addEventListener('click',saveMeal);
       loadSavedMeals();
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      populateSelect(allFoods);
-      loadSavedMeals();
-
-      document.getElementById('foodSearch').addEventListener('input', e => {
-        const q = e.target.value.toLowerCase();
-        populateSelect(allFoods.filter(f => f.toLowerCase().includes(q)));
-      });
-
-      foodSelect.addEventListener('dblclick', e => {
-        if (e.target.tagName === 'OPTION') {
-          const val = e.target.value;
-          if (!Array.from(selectedList.options).some(o => o.value === val)) {
-            selectedList.appendChild(e.target.cloneNode(true));
-          }
-        }
-      });
-
-      selectedList.addEventListener('dblclick', e => {
-        if (e.target.tagName === 'OPTION') e.target.remove();
-      });
-
-      document.getElementById('generateBtn').addEventListener('click', submitForm);
-      saveBtn.addEventListener('click', () => {
-        if (currentResult) {
-          savedMeals.push(currentResult);
-          localStorage.setItem('savedMeals', JSON.stringify(savedMeals));
-          loadSavedMeals();
-          saveBtn.disabled = true;
-        }
-      });
     });
-
-    function submitForm() {
-      resultsDiv.innerHTML = '<p>Generating...</p>';
-      saveBtn.disabled = true;
-      const selected = Array.from(selectedList.options).map(o => o.value);
-      const payload = {
-        foods: selected,
-        calories_max: parseFloat(document.getElementById('caloriesMax').value) || 0,
-        protein_max: parseFloat(document.getElementById('proteinMax').value) || 0,
-        ratio_max: parseRatio(document.getElementById('ratioMax').value),
-        objective_function_type: parseInt(document.getElementById('objectiveType').value)
-      };
-      fetch('/optimize', {
-        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
-      })
-      .then(r=>r.json())
-      .then(d=>{
-        renderResults(d);
-        if (!d.error) {
-          currentResult = d;
-          saveBtn.disabled = false;
-        }
-      })
-      .catch(err=>{ resultsDiv.innerHTML = `<p>Error: ${err.message}</p>`; });
+    function addFood(val){ let sl=document.getElementById('selectedList'); if([...sl.options].every(o=>o.value!==val)){ sl.add(new Option(val,val)); }}
+    function removeFood(val){ let sl=document.getElementById('selectedList'); [...sl.options].forEach(o=>{ if(o.value===val) sl.remove(o.index); }); }
+    function submitForm(){
+      const results=document.getElementById('results'); results.innerHTML=''; document.getElementById('saveBtn').style.display='none';
+      const selected=[...document.getElementById('selectedList').options].map(o=>o.value);
+      const payload={ foods:selected, calories_max:parseFloat(document.getElementById('caloriesMax').value)||0, protein_max:parseFloat(document.getElementById('proteinMax').value)||0, ratio_max:document.getElementById('ratioMax').value, objective_function_type:parseInt(document.getElementById('objectiveType').value) };
+      fetch('/optimize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+        .then(r=>r.json())
+        .then(d=>{ if(d.error){ results.textContent='⚠️ '+d.error; } else{ renderResults(d); document.getElementById('saveBtn').style.display='block'; }} )
+        .catch(e=>{ results.textContent='❌ '+e; });
     }
-
-    function renderResults(d) {
-      if (d.error) {
-        resultsDiv.innerHTML = `<h2>Error</h2><p>${d.error}</p>`;
-        return;
-      }
-      let html = `<h2>${d.meal_plan}</h2><ul>`;
-      d.ingredients.forEach(i=>{
-        html += `<li>${i.name}: ${i.grams.toFixed(2)}g (Fat ${i.fat.toFixed(1)}g, Prot ${i.protein.toFixed(1)}g, Carb ${i.carbs.toFixed(1)}g, Cal ${i.calories.toFixed(1)})</li>`;
-      });
-      html += `</ul><p><strong>Totals</strong>: Calories ${d.totals.calories.toFixed(1)}g, Protein ${d.totals.protein.toFixed(1)}g, Fat ${d.totals.fat.toFixed(1)}g, Carbs ${d.totals.carbs.toFixed(1)}g, Ratio ${d.totals.fat.toFixed(1)}:${d.totals.protein.toFixed(1)}</p>`;
-      resultsDiv.innerHTML = html;
+    function renderResults(d){
+      const r=document.getElementById('results'); r.innerHTML=`<h2>Meal Plan</h2><pre>${d.meal_plan}</pre><h3>Ingredients</h3><table><tr><th>Name</th><th>g</th><th>Fat</th><th>Prot</th><th>Carb</th><th>Cal</th></tr>${d.ingredients.map(i=>`<tr><td>${i.name}</td><td>${i.grams.toFixed(2)}</td><td>${i.fat.toFixed(2)}</td><td>${i.protein.toFixed(2)}</td><td>${i.carbs.toFixed(2)}</td><td>${i.calories.toFixed(2)}</td></tr>`).join('')}\
+<h3>Totals</h3><table><tr><th>Metric</th><th>Amount</th></tr><tr><td>Total Fat</td><td>${d.totals.fat.toFixed(2)}</td></tr><tr><td>Total Prot</td><td>${d.totals.protein.toFixed(2)}</td></tr><tr><td>Total Carb</td><td>${d.totals.carbs.toFixed(2)}</td></tr><tr><td>Total Cal</td><td>${d.totals.calories.toFixed(2)}</td></tr></table>`;
     }
+    function saveMeal(){ const r=document.getElementById('results').innerHTML; if(!r) return; let list=JSON.parse(localStorage.getItem('savedMeals')||'[]'); list.push(r); localStorage.setItem('savedMeals',JSON.stringify(list)); loadSavedMeals(); }
+    function loadSavedMeals(){ const ul=document.getElementById('savedMeals'); ul.innerHTML=''; JSON.parse(localStorage.getItem('savedMeals')||'[]').forEach((html,i)=>{ let li=document.createElement('li'); li.innerHTML=`<span>Meal ${i+1}</span><button onclick=\"removeSaved(${i})\">Remove</button>`; li.insertAdjacentHTML('beforeend',html); ul.appendChild(li);} ); }
+    function removeSaved(idx){ let list=JSON.parse(localStorage.getItem('savedMeals')||'[]'); list.splice(idx,1); localStorage.setItem('savedMeals',JSON.stringify(list)); loadSavedMeals(); }
   </script>
 </body>
 </html>
