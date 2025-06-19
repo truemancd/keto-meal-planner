@@ -174,13 +174,11 @@
         meal_name: mealNameInput.value || 'User Meal'
       };
 
-      // Optional nutrient bounds
-      ['protein', 'fat', 'carb'].forEach(nutr => {
-        const minEl = document.getElementById(`${nutr}Min`);
-        const maxEl = document.getElementById(`${nutr}Max`);
-        if (minEl && minEl.value) payload[`${nutr}_min`] = parseFloat(minEl.value);
-        if (maxEl && maxEl.value) payload[`${nutr}_max`] = parseFloat(maxEl.value);
-      });
+      // Optional fat bounds
+      const fatMin = document.getElementById('fatMin');
+      const fatMax = document.getElementById('fatMax');
+      if (fatMin && fatMin.value) payload.fat_min = parseFloat(fatMin.value);
+      if (fatMax && fatMax.value) payload.fat_max = parseFloat(fatMax.value);
 
       fetch('/optimize', {
         method: 'POST', headers: {'Content-Type':'application/json'},
