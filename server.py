@@ -79,7 +79,7 @@ def optimize_meal():
                 cal_gram_ratio=safe_float(r[cal_col]) / 100.0,
                 ml_gram_ratio=1.0
             )
-            meal.add_food(ft)
+            meal.add_opti_ingredient(ft)
             ingredients.append(ft)
 
         # Apply constraints
