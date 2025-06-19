@@ -35,6 +35,9 @@ def optimize_meal():
         # Calorie bounds
         cal_min = safe_float(data.get('calories_min'))
         cal_max = safe_float(data.get('calories_max'))
+        # Optional fat bounds
+        fat_min = none_or_float(data.get('fat_min'))
+        fat_max = none_or_float(data.get('fat_max'))
 
         # Ratio max parsing
         ratio_raw = data.get('ratio_max', '').strip()
@@ -85,6 +88,11 @@ def optimize_meal():
         meal.set_calories_minimum(cal_min)
         meal.set_calories_maximum(cal_max)
         meal.set_ratio_maximum(ratio_max)
+        # Apply fat constraints
+        if fat_min is not None:
+            meal.set_fat_grams_minimum(fat_min)
+        if fat_max is not None:
+            meal.set_fat_grams_maximum(fat_max)
 
         # Solve
         success = meal.optimize()
@@ -166,6 +174,9 @@ def optimize_meal():
         # Calorie bounds
         cal_min = safe_float(data.get('calories_min'))
         cal_max = safe_float(data.get('calories_max'))
+        # Optional fat bounds
+        fat_min = none_or_float(data.get('fat_min'))
+        fat_max = none_or_float(data.get('fat_max'))
         # Optional nutrient bounds
         prot_min = none_or_float(data.get('protein_min'))
         prot_max = none_or_float(data.get('protein_max'))
