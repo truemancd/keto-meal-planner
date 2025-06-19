@@ -971,4 +971,28 @@ if __name__=='__main__':
     
     # post-optimize print
     if it_worked:
-        print(meal_one)
+        print(meal_one)    def get_totals(self):
+        """Return a dict of totals from the last optimization."""
+        fat_total = sum(
+            ing.get_food_type().get_fat_gram_ratio() * ing.get_grams()
+            for ing in self.__opti_ingredients_dict.values()
+        )
+        protein_total = sum(
+            ing.get_food_type().get_protein_gram_ratio() * ing.get_grams()
+            for ing in self.__opti_ingredients_dict.values()
+        )
+        carbs_total = sum(
+            ing.get_food_type().get_carbs_gram_ratio() * ing.get_grams()
+            for ing in self.__opti_ingredients_dict.values()
+        )
+        cal_total = sum(
+            ing.get_food_type().get_cal_gram_ratio() * ing.get_grams()
+            for ing in self.__opti_ingredients_dict.values()
+        )
+        return {
+            "fat": round(fat_total, self.__rounding_digits),
+            "protein": round(protein_total, self.__rounding_digits),
+            "carbs": round(carbs_total, self.__rounding_digits),
+            "calories": round(cal_total, self.__rounding_digits),
+        }
+
