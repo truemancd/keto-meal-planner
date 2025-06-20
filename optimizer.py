@@ -891,3 +891,4 @@ class Opti_Meal:
             "calories": round(cal_total, self.__rounding_digits),
         }
 
+
