@@ -163,6 +163,8 @@
     saveBtn.addEventListener('click', saveMeal);
 
     function submitForm() {
+      // DEBUG: log payload to console
+      console.log('Submitting payload:');
       clearResults();
       const ingredients = [...ingredientTable.querySelectorAll('tr')].map(tr => {
         const obj = { name: tr.children[0].textContent };
