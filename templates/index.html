@@ -1,3 +1,9 @@
+<!--
+Instructions:
+1. Copy this file into `templates/index.html`.
+2. Remove any other `index.html` at the project root.
+3. Restart Flask / redeploy.
+-->  
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +12,7 @@
   <title>Keto Meal Planner</title>
   <style>
     body { font-family: sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; }
-    .container { display: flex; max-width: 1000px; margin: 40px auto; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
+    .container { display: flex; max-width: 1000px; margin: 40px auto; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: visible; /* allow scrolling to top */ }
     .main-panel { flex: 3; padding: 20px; }
     .saved-panel { flex: 1; padding: 20px; border-left: 1px solid #ddd; font-size: 12px; overflow-y: auto; }
     h2, h3 { margin-top: 0; }
@@ -18,8 +24,6 @@
     #results { background: #f9f9f9; padding: 10px; margin-top: 20px; white-space: pre-wrap; font-family: monospace; }
     .button { padding: 8px 12px; cursor: pointer; margin-right: 5px; }
     .button:disabled { opacity: 0.5; cursor: not-allowed; }
-    .saved-item { margin-bottom: 10px; }
-    .saved-item button { margin-left: 5px; font-size: 10px; }
     label { font-weight: bold; margin-top: 10px; display: block; }
     input[type="number"], input[type="text"], select { width: 100%; padding: 5px; margin-bottom: 5px; }
   </style>
@@ -56,6 +60,14 @@
       <label for="fatMax">Fat Max (g):</label>
       <input type="number" id="fatMax" placeholder="Optional" />
       <small>Maximum total fat (g)</small>
+
+      <label for="proteinMin">Protein Min (g):</label>
+      <input type="number" id="proteinMin" placeholder="Optional" />
+      <small>Minimum total protein (g)</small>
+
+      <label for="proteinMax">Protein Max (g):</label>
+      <input type="number" id="proteinMax" placeholder="Optional" />
+      <small>Maximum total protein (g)</small>
 
       <label for="ratioMax">Fat-to-Protein Ratio Max:</label>
       <input type="text" id="ratioMax" placeholder="1.5 or 3:1" />
@@ -159,12 +171,8 @@
     document.getElementById('addBtn').addEventListener('click', addFood);
     document.getElementById('removeBtn').addEventListener('click', removeFood);
 
-    document.getElementById('generateBtn').addEventListener('click', submitForm);
-    saveBtn.addEventListener('click', saveMeal);
-
+    // Submit form and debug with alert
     function submitForm() {
-      // DEBUG: log payload to console
-      console.log('Submitting payload:');
       clearResults();
       const ingredients = [...ingredientTable.querySelectorAll('tr')].map(tr => {
         const obj = { name: tr.children[0].textContent };
@@ -177,17 +185,23 @@
 
       const payload = { ingredients };
       const calMinEl = document.getElementById('caloriesMin');
-      payload.calories_min = calMinEl.value ? parseFloat(calMinEl.value) : 0;
+      if (calMinEl.value) payload.calories_min = parseFloat(calMinEl.value);
       const calMaxEl = document.getElementById('caloriesMax');
       if (calMaxEl.value) payload.calories_max = parseFloat(calMaxEl.value);
-      payload.ratio_max = document.getElementById('ratioMax').value;
-      payload.objective_function_type = parseInt(document.getElementById('objectiveType').value);
-      payload.meal_name = mealNameInput.value || 'User Meal';
-
       const fatMinEl = document.getElementById('fatMin');
       if (fatMinEl.value) payload.fat_min = parseFloat(fatMinEl.value);
       const fatMaxEl = document.getElementById('fatMax');
       if (fatMaxEl.value) payload.fat_max = parseFloat(fatMaxEl.value);
+      const protMinEl = document.getElementById('proteinMin');
+      if (protMinEl.value) payload.protein_min = parseFloat(protMinEl.value);
+      const protMaxEl = document.getElementById('proteinMax');
+      if (protMaxEl.value) payload.protein_max = parseFloat(protMaxEl.value);
+      payload.ratio_max = document.getElementById('ratioMax').value;
+      payload.objective_function_type = parseInt(document.getElementById('objectiveType').value);
+      payload.meal_name = mealNameInput.value || 'User Meal';
+
+      // Debug: show payload as alert
+      alert('Submitting payload: ' + JSON.stringify(payload, null, 2));
 
       fetch('/optimize', {
         method: 'POST', headers: {'Content-Type':'application/json'},
@@ -202,8 +216,9 @@
       .catch(e => { resultsDiv.textContent = '⚠️ ' + e; });
     }
 
-    // ... (saveMeal, renderSavedMeals, etc. unchanged) ...
+    document.getElementById('generateBtn').addEventListener('click', submitForm);
 
+    // Save and load unchanged...
     renderAvailable();
     renderSavedMeals();
   </script>
