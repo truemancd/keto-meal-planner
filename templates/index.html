@@ -1,3 +1,9 @@
+<!--
+Clean index.html for Keto Meal Planner
+Instructions:
+1. Place this in `templates/index.html`.
+2. Remove any other `index.html` at project root.
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -197,7 +203,7 @@
       payload.objective_function_type = parseInt(document.getElementById('objectiveType').value);
       payload.meal_name = mealNameInput.value || 'User Meal';
 
-      alert('Submitting payload: ' + JSON.stringify(payload, null, 2));
+      
 
       fetch('/optimize', {
         method: 'POST', headers: {'Content-Type':'application/json'},
