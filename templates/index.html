@@ -1,9 +1,3 @@
-<!--
-Instructions:
-1. Copy this file into `templates/index.html`.
-2. Remove any other `index.html` at the project root.
-3. Restart Flask / redeploy.
--->  
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,7 +6,7 @@ Instructions:
   <title>Keto Meal Planner</title>
   <style>
     body { font-family: sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; }
-    .container { display: flex; max-width: 1000px; margin: 40px auto; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: visible; /* allow scrolling to top */ }
+    .container { display: flex; max-width: 1000px; margin: 40px auto; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: visible; }
     .main-panel { flex: 3; padding: 20px; }
     .saved-panel { flex: 1; padding: 20px; border-left: 1px solid #ddd; font-size: 12px; overflow-y: auto; }
     h2, h3 { margin-top: 0; }
@@ -68,6 +62,14 @@ Instructions:
       <label for="proteinMax">Protein Max (g):</label>
       <input type="number" id="proteinMax" placeholder="Optional" />
       <small>Maximum total protein (g)</small>
+
+      <label for="carbMin">Carbs Min (g):</label>
+      <input type="number" id="carbMin" placeholder="Optional" />
+      <small>Minimum total carbs (g)</small>
+
+      <label for="carbMax">Carbs Max (g):</label>
+      <input type="number" id="carbMax" placeholder="Optional" />
+      <small>Maximum total carbs (g)</small>
 
       <label for="ratioMax">Fat-to-Protein Ratio Max:</label>
       <input type="text" id="ratioMax" placeholder="1.5 or 3:1" />
@@ -171,7 +173,6 @@ Instructions:
     document.getElementById('addBtn').addEventListener('click', addFood);
     document.getElementById('removeBtn').addEventListener('click', removeFood);
 
-    // Submit form and debug with alert
     function submitForm() {
       clearResults();
       const ingredients = [...ingredientTable.querySelectorAll('tr')].map(tr => {
@@ -184,23 +185,18 @@ Instructions:
       });
 
       const payload = { ingredients };
-      const calMinEl = document.getElementById('caloriesMin');
-      if (calMinEl.value) payload.calories_min = parseFloat(calMinEl.value);
-      const calMaxEl = document.getElementById('caloriesMax');
-      if (calMaxEl.value) payload.calories_max = parseFloat(calMaxEl.value);
-      const fatMinEl = document.getElementById('fatMin');
-      if (fatMinEl.value) payload.fat_min = parseFloat(fatMinEl.value);
-      const fatMaxEl = document.getElementById('fatMax');
-      if (fatMaxEl.value) payload.fat_max = parseFloat(fatMaxEl.value);
-      const protMinEl = document.getElementById('proteinMin');
-      if (protMinEl.value) payload.protein_min = parseFloat(protMinEl.value);
-      const protMaxEl = document.getElementById('proteinMax');
-      if (protMaxEl.value) payload.protein_max = parseFloat(protMaxEl.value);
+      document.getElementById('caloriesMin').value && (payload.calories_min = parseFloat(document.getElementById('caloriesMin').value));
+      document.getElementById('caloriesMax').value && (payload.calories_max = parseFloat(document.getElementById('caloriesMax').value));
+      document.getElementById('fatMin').value && (payload.fat_min = parseFloat(document.getElementById('fatMin').value));
+      document.getElementById('fatMax').value && (payload.fat_max = parseFloat(document.getElementById('fatMax').value));
+      document.getElementById('proteinMin').value && (payload.protein_min = parseFloat(document.getElementById('proteinMin').value));
+      document.getElementById('proteinMax').value && (payload.protein_max = parseFloat(document.getElementById('proteinMax').value));
+      document.getElementById('carbMin').value && (payload.carb_min = parseFloat(document.getElementById('carbMin').value));
+      document.getElementById('carbMax').value && (payload.carb_max = parseFloat(document.getElementById('carbMax').value));
       payload.ratio_max = document.getElementById('ratioMax').value;
       payload.objective_function_type = parseInt(document.getElementById('objectiveType').value);
       payload.meal_name = mealNameInput.value || 'User Meal';
 
-      // Debug: show payload as alert
       alert('Submitting payload: ' + JSON.stringify(payload, null, 2));
 
       fetch('/optimize', {
@@ -218,9 +214,79 @@ Instructions:
 
     document.getElementById('generateBtn').addEventListener('click', submitForm);
 
-    // Save and load unchanged...
-    renderAvailable();
-    renderSavedMeals();
+    function saveMeal() {
+      const name = mealNameInput.value || 'User Meal';
+      const payload = {};
+      // include all fields
+      payload.ingredients = [...ingredientTable.querySelectorAll('tr')].map(tr => {
+        const obj = { name: tr.children[0].textContent };
+        tr.querySelectorAll('input').forEach(inp => {
+          const key = inp.dataset.field;
+          if (inp.type === 'checkbox') obj[key] = inp.checked;
+          else if (inp.value) obj[key] = parseFloat(inp.value);
+        });
+        return obj;
+      });
+      ['calories','fat','protein','carb'].forEach(n => {
+        const min = document.getElementById(`${n}Min`).value;
+        const max = document.getElementById(`${n}Max`).value;
+        if (min) payload[`${n}_min`] = parseFloat(min);
+        if (max) payload[`${n}_max`] = parseFloat(max);
+      });
+      payload.ratio_max = document.getElementById('ratioMax').value;
+      payload.objective_function_type = parseInt(document.getElementById('objectiveType').value);
+      payload.meal_name = name;
+      const resultsHtml = resultsDiv.innerHTML;
+      const saved = JSON.parse(localStorage.getItem('savedMeals')||'[]');
+      saved.push({ meal_name: name, payload, resultsHtml });
+      localStorage.setItem('savedMeals', JSON.stringify(saved));
+      renderSavedMeals(); saveBtn.disabled = true;
+    }
+
+    function renderSavedMeals() {
+      savedList.innerHTML = '';
+      JSON.parse(localStorage.getItem('savedMeals')||'[]').forEach((item,i) => {
+        const div = document.createElement('div'); div.className='saved-item';
+        div.innerHTML = `<strong>${item.meal_name}</strong> <button onclick="loadMeal(${i})">Load</button> <button onclick="deleteMeal(${i})">Remove</button>`;
+        savedList.appendChild(div);
+      });
+    }
+
+    function loadMeal(idx) {
+      const saved = JSON.parse(localStorage.getItem('savedMeals')||'[]');
+      const item = saved[idx];
+      selected.innerHTML = '';
+      item.payload.ingredients.forEach(ing => {
+        const opt = document.createElement('option'); opt.value=ing.name; opt.textContent=ing.name;
+        selected.appendChild(opt);
+      });
+      ['calories','fat','protein','carb'].forEach(n => {
+        document.getElementById(`${n}Min`).value = item.payload[`${n}_min`] || '';
+        document.getElementById(`${n}Max`).value = item.payload[`${n}_max`] || '';
+      });
+      document.getElementById('ratioMax').value = item.payload.ratio_max || '';
+      document.getElementById('objectiveType').value = item.payload.objective_function_type;
+      mealNameInput.value = item.meal_name;
+      rebuildOptionsTable();
+      const rows = ingredientTable.querySelectorAll('tr');
+      rows.forEach((tr,i) => {
+        const data = item.payload.ingredients[i] || {};
+        tr.querySelector('input[data-field="grams_minimum"]').value            = data.grams_minimum            || '';
+        tr.querySelector('input[data-field="grams_maximum"]').value            = data.grams_maximum            || '';
+        tr.querySelector('input[data-field="use_in_objective_function"]').checked = !!data.use_in_objective_function;
+        tr.querySelector('input[data-field="points_per_gram"]').value           = data.points_per_gram           || '';
+        tr.querySelector('input[data-field="target_grams"]').value              = data.target_grams              || '';
+      });
+      resultsDiv.innerHTML = item.resultsHtml;
+      saveBtn.disabled = true;
+    }
+
+    function deleteMeal(idx) {
+      const saved = JSON.parse(localStorage.getItem('savedMeals')||'[]');
+      saved.splice(idx,1); localStorage.setItem('savedMeals', JSON.stringify(saved)); renderSavedMeals();
+    }
+
+    renderAvailable(); filterFoods(); renderSavedMeals();
   </script>
 </body>
 </html>
